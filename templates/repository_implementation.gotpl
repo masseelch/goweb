@@ -1,0 +1,47 @@
+package repository
+
+import(
+    "app"
+    "app/server"
+    "github.com/Masterminds/squirrel"
+)
+
+const (
+    k{{.Type}}Table = "{{.Type | ToLower | Plural}}"
+)
+
+type {{.Type}} struct {
+    *server.Server
+}
+
+func (r {{.Type}}) CreateSelectBuilder(alias string) squirrel.SelectBuilder {
+    return squirrel.Select(r.GetSelectFields(alias)...).From(k{{.Type}}Table+" "+alias)
+}
+
+func (r {{.Type}}) Find(e *app.{{.Type}}, id uint) error {
+    return r.CreateSelectBuilder("e").Where("e.id = ?", id).RunWith(r.DB).QueryRow().Scan(r.GetSelectDestinations(e)...)
+}
+
+func (r {{.Type}}) GetInsertFields(alias string) []string {
+    return []string{ {{range .InsertFields}}alias+".{{.}}",{{end}} }
+}
+
+func (r {{.Type}}) GetInsertValues(m app.{{.Type}}) []interface{} {
+    return []interface{}{ {{range .InsertValues}}m.{{.}},{{end}} }
+}
+
+func (r {{.Type}}) GetSelectDestinations(m *app.{{.Type}}) []interface{} {
+    return []interface{}{ {{range .SelectDestinations}}&m.{{.}},{{end}} }
+}
+
+func (r {{.Type}}) GetSelectFields(alias string) []string {
+    return []string{ {{range .SelectFields}}alias+".{{.}}",{{end}} }
+}
+
+func (r {{.Type}}) GetUpdateFields(alias string) []string {
+    return []string{ {{range .UpdateFields}}alias+".{{.}}",{{end}} }
+}
+
+func (r {{.Type}}) GetUpdateValues(m app.{{.Type}}) []interface{} {
+    return []interface{}{ {{range .UpdateValues}}m.{{.}},{{end}} }
+}

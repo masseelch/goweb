@@ -1,0 +1,16 @@
+package {{.Package}}
+
+import (
+    "github.com/Masterminds/squirrel"
+)
+
+type {{.Type}}Repository interface {
+    CreateSelectBuilder(alias string) squirrel.SelectBuilder
+    Find(*{{.Type}}, uint) error
+    GetInsertFields(alias string) []string
+    GetInsertValues({{.Type}}) []interface{}
+    GetSelectDestinations(*{{.Type}}) []interface{}
+    GetSelectFields(alias string) []string
+    GetUpdateFields(alias string) []string
+    GetUpdateValues({{.Type}}) []interface{}
+}
