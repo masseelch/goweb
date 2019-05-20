@@ -1,6 +1,6 @@
 package test
 
 // generator:Model
-type RepositoryModel struct {
+type Model struct {
 
 }
