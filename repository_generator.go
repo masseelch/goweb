@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 )
@@ -134,18 +135,27 @@ func GenerateRepositories(fs RepositoryFlags) {
 		files = append(files, src)
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(len(files))
+
 	for _, file := range files {
-		g.SrcFilepath = abs
-		if src.IsDir() {
-			g.SrcFilepath = filepath.Join(g.SrcFilepath, file.Name())
-		}
+		go func(file os.FileInfo) {
+			defer wg.Done()
 
-		// Parse the file.
-		parsed, err := parser.ParseFile(token.NewFileSet(), g.SrcFilepath, nil, parser.ParseComments)
-		panicOnError(err)
+			g.SrcFilepath = abs
+			if src.IsDir() {
+				g.SrcFilepath = filepath.Join(g.SrcFilepath, file.Name())
+			}
 
-		ast.Walk(g, parsed)
+			// Parse the file.
+			parsed, err := parser.ParseFile(token.NewFileSet(), g.SrcFilepath, nil, parser.ParseComments)
+			panicOnError(err)
+
+			ast.Walk(g, parsed)
+		}(file)
 	}
+
+	wg.Wait()
 }
 
 // todo - Write a comment parser to parse generator annotations.
@@ -189,8 +199,20 @@ func (g RepositoryGenerator) Visit(n ast.Node) ast.Visitor {
 		if strings.HasPrefix(cg.Text(), KModelAnnotation) {
 			if _, ok := t.Type.(*ast.StructType); ok {
 
-				g.generateInterface(t)
-				g.generateImplementation(t)
+				var wg sync.WaitGroup
+				wg.Add(2)
+
+				go func() {
+					defer wg.Done()
+					g.generateInterface(t)
+				}()
+
+				go func() {
+					defer wg.Done()
+					g.generateImplementation(t)
+				}()
+
+				wg.Wait()
 			}
 		}
 	}
