@@ -1,0 +1,11 @@
+addr: 0.0.0.0:7777
+
+auth:
+  key: config/public.pem
+
+db:
+  host: 127.0.0.1
+  port: 3308
+  name: meine_knete
+  user: root
+  password: nopass
